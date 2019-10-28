@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Are we reorganized yet?</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width">
+
+        <style>
+body {
+    background-color: black;
+    color: white;
+    margin: 0;
+}
+h1, h2 {
+    text-align: center;
+}
+h1 {
+    font-family: 'Comic Sans MS';
+    font-size: 30vw;
+    margin: 0;
+}
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 1em;
+}
+ul li {
+    text-decoration: line-through;
+}
+ul li:first-child {
+    text-decoration: none;
+}
+.vbox {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    min-height: 100vh;
+}
+.flex {
+    -webkit-flex: 1;
+    flex: 1;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+}
+        </style>
+    </head>
+
+    <body class="vbox">
+        <h1 id="answer" class="flex">WAIT</h1>
+        <h2>Days since last reorg: <strong id="last-reorg-days"></strong></h2>
+        <h2>Expected reorg <strong id="next-reorg-days"></strong></h2>
+        <ul>
+            <li>(since October 28, 2019)</li>
+        </ul>
+
+        <script>
+
+function require(name) {
+    switch (name) {
+        case 'jquery': return function(key) {
+            if (key[0] === '#')
+                return document.getElementById(key.substring(1, key.length));
+            return document.getElementsByTagName(key);
+        };
+        case 'mustache': return { render: function(str, obj) {
+            var ret = str;
+            for (var key in obj)
+                ret = ret.replace('{{' + key + '}}', obj[key]);
+            return ret;
+        } };
+        case 'moment': return function(d) {
+            return new Date(d);
+        };
+        case 'mocha': return {
+            describe: function(txt, func) {
+                console.log(txt);
+                try {
+                    func();
+                    console.log('PASS!');
+                } catch(e) {
+                    console.log('FAIL!', e.toString());
+                }
+            }
+        };
+        case 'should': return {
+            equal: function(a,b) {
+                if ((!!a && a===b) || (1/a === 1/b) || (a!==a && b!==b)) {
+                    return;
+                }
+                throw new Error('equality error, expected ' + b + ', got ' + a);
+            }
+        };
+        default: alert('unimplemented library!!!!1!');
+    }
+}
+
+var $ = require('jquery');
+
+var moment = require('moment');
+
+function parseDate(txt) {
+    return moment(txt.replace('(since', '').replace(')', ''));
+}
+
+// unit tests, yo
+var mocha = require('mocha');
+var should = require('should');
+
+mocha.describe('a LI date element should be correctly parsed', function() {
+    should.equal(+parseDate('(since July 13, 2017)'), 1499896800000 /* big party */);
+});
+
+var lis = $('li');
+var reorgs = [];
+for (var i = 0; i < lis.length; i++) {
+    reorgs.push(parseDate(lis[i].textContent));
+}
+
+var NOW = +new Date();
+var ONE_DAY = 24 * 60 * 60 * 1000;
+
+var lastReorg = +reorgs[0];
+var firstReorg = +reorgs[reorgs.length - 1];
+
+var daysSinceLastReorg = Math.floor((NOW - lastReorg) / ONE_DAY);
+$('#last-reorg-days').textContent = daysSinceLastReorg;
+
+var avgTimeBetweenReorgs = (lastReorg - firstReorg) / reorgs.length;
+
+var expectedNextReorg = lastReorg + avgTimeBetweenReorgs;
+var daysToNextReorg = Math.ceil((expectedNextReorg - NOW) / ONE_DAY);
+
+var mustache = require('mustache');
+
+$('#next-reorg-days').textContent = daysToNextReorg > 0 ?
+    mustache.render('in {{days}} days', {days: daysToNextReorg}):
+    mustache.render('{{days}} days ago', {days: -daysToNextReorg});
+
+$('#answer').textContent = daysToNextReorg > 0 ? 'YES' : 'NO';
+        </script>
+
+        <!-- tracking -->
+
+        <!-- End tracking -->
+
+    </body>
+</html>
